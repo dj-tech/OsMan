@@ -1,0 +1,40 @@
+version: '2'
+
+networks:
+  cinetwork:
+    driver: bridge
+
+services:
+ jenkins:
+  build: ./jenkins
+  ports:
+    - "10200:8080"
+  networks:
+    - cinetwork
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /usr/local/bin/docker:/usr/bin/docker
+  depends_on:
+    - sonarqube
+  environment:
+    - SONAR_PORT=9000
+    - SONAR_DB_PORT=5432
+
+ sonarqube:
+  build: ./sonarqube
+  ports:
+   - "10201:9000"
+   - "5432:5432"
+  networks:
+    - cinetwork
+  depends_on:
+    - sonardb
+  environment:
+   - SONARQUBE_JDBC_URL=jdbc:postgresql://sonardb:5432/sonar
+ sonardb:
+  networks:
+    - cinetwork
+  image: postgres
+  environment:
+   - POSTGRES_USER=sonar
+   - POSTGRES_PASSWORD=sonar
